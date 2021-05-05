@@ -2,8 +2,7 @@ import re
 import requests
 from Crypto.Cipher import AES
 import os
-from utils import ts2mp4
-
+from utils import ts2mp4, get_cookies_dic_list
 
 def get_ts_url(url):
     parsed_url = re.sub('start=\d+&end=\d+', 'start=0', url)
@@ -17,10 +16,10 @@ def download(file_url, file):
     return 0
 
 
-def lg_download(file_url, filename, path):
+def lg_download(file_url, filename, path, headers=None, cookies=None):
     # 用来下载大文件，有进度条
     file = os.path.join(path, filename)
-    response = requests.get(file_url, stream=True)
+    response = requests.get(file_url, stream=True, headers=headers, cookies=cookies)
     size = 0
     chunk_size = 1024
     content_size = int(response.headers['content-length'])
@@ -72,5 +71,17 @@ def download_single(ts_url, key_url, filename, path):
     decrypt_file(file + '.ts', key)
     os.remove(file)
     ts2mp4(file + '.ts')
-    print('\n' + filename + ' 下载完成！')
+    print('\n' + filename + ' 下载完成！\n')
     return 0
+
+def download_zip_doc(url, filename, path):
+    headers = {
+        'referer': url,
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.51'
+    }
+    cookies = {}
+    for cookie in get_cookies_dic_list():
+        cookies[cookie[0]] = cookie[1]
+
+    lg_download(url, filename + '.zip', path, headers, cookies)
+    print('\n' + filename + ' 下载完成！\n')
